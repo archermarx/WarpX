@@ -455,7 +455,7 @@ MultiParticleContainer::Evolve (int lev,
                                 MultiFab* rho, MultiFab* crho,
                                 const MultiFab* cEx, const MultiFab* cEy, const MultiFab* cEz,
                                 const MultiFab* cBx, const MultiFab* cBy, const MultiFab* cBz,
-                                Real t, Real dt, DtType a_dt_type, bool skip_deposition)
+                                Real t, Real dt, DtType a_dt_type, bool skip_deposition, int step)
 {
     if (! skip_deposition) {
         jx.setVal(0.0);
@@ -467,9 +467,17 @@ MultiParticleContainer::Evolve (int lev,
         if (rho) rho->setVal(0.0);
         if (crho) crho->setVal(0.0);
     }
+    int ind = 0;
     for (auto& pc : allcontainers) {
-        pc->Evolve(lev, Ex, Ey, Ez, Bx, By, Bz, jx, jy, jz, cjx, cjy, cjz,
-                   rho, crho, cEx, cEy, cEz, cBx, cBy, cBz, t, dt, a_dt_type, skip_deposition);
+        ind += 1;
+        int subcycling_interval = pc->subcycling_interval;
+        bool take_step = (!pc -> do_subcycling) || (pc->do_subcycling && step%subcycling_interval == 0);
+        //amrex::Print() << "Species " << ind << ", subcycling interval: " << subcycling_interval << ", take step = " << take_step << "\n";
+        if (take_step){
+            auto dt_sub = dt * subcycling_interval;
+            pc->Evolve(lev, Ex, Ey, Ez, Bx, By, Bz, jx, jy, jz, cjx, cjy, cjz,
+                    rho, crho, cEx, cEy, cEz, cBx, cBy, cBz, t, dt_sub, a_dt_type, skip_deposition);
+        }
     }
 }
 

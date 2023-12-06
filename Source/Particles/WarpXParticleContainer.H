@@ -442,8 +442,14 @@ protected:
 
     int do_resampling = 0;
 
-    /** Whether back-transformed diagnostics is turned on for the corresponding species.*/
+    // Whether back-transformed diagnostics is turned on for the corresponding species
     bool m_do_back_transformed_particles = false;
+
+    // Whether to do particle sub-cycling
+    bool do_subcycling = false;
+
+    // Particle sub-cycling interval (must be odd)
+    int subcycling_interval = 1;
 
 #ifdef WARPX_QED
     //Species can receive a shared pointer to a QED engine (species for

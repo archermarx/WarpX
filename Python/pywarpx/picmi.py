@@ -139,6 +139,12 @@ class Species(picmistandard.PICMI_Species):
     warpx_resampling_trigger_max_avg_ppc: int, default=infinity
         Resampling will be done when the average number of
         particles per cell exceeds this number
+
+    warpx_do_subcycling: bool, default=False
+        whether subcycling is enabled for this species
+
+    warpx_subcycling_interval: int, default=1
+        subcycling interval for this species. Must be odd.
     """
     def init(self, kw):
 
@@ -219,6 +225,10 @@ class Species(picmistandard.PICMI_Species):
         self.resampling_trigger_intervals = kw.pop('warpx_resampling_trigger_intervals', None)
         self.resampling_triggering_max_avg_ppc = kw.pop('warpx_resampling_trigger_max_avg_ppc', None)
 
+        # Subcycling settings
+        self.do_subcycling = kw.pop('warpx_do_subcycling', None)
+        self.subcycling_interval = kw.pop('warpx_subcycling_interval', None)
+
     def initialize_inputs(self, layout,
                           initialize_self_fields = False,
                           injection_plane_position = None,
@@ -257,7 +267,9 @@ class Species(picmistandard.PICMI_Species):
                                              random_theta = self.random_theta,
                                              do_resampling=self.do_resampling,
                                              resampling_trigger_intervals=self.resampling_trigger_intervals,
-                                             resampling_trigger_max_avg_ppc=self.resampling_triggering_max_avg_ppc)
+                                             resampling_trigger_max_avg_ppc=self.resampling_triggering_max_avg_ppc,
+                                             do_subcycling=self.do_subcycling,
+                                             subcycling_interval=self.subcycling_interval,)
 
         # add reflection models
         self.species.add_new_attr("reflection_model_xlo(E)", self.reflection_model_xlo)

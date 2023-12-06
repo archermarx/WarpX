@@ -345,6 +345,16 @@ PhysicalParticleContainer::PhysicalParticleContainer (AmrCore* amr_core, int isp
     pp_species_name.query("do_resampling", do_resampling);
     if (do_resampling) m_resampler = Resampling(species_name);
 
+    // Read particle subcycling options
+    pp_species_name.query("do_subcycling", do_subcycling);
+    pp_species_name.query("subcycling_interval", subcycling_interval);
+
+    // Check to make sure subcycle interval is odd
+    WARPX_ALWAYS_ASSERT_WITH_MESSAGE(
+        !do_subcycling || (do_subcycling && subcycling_interval % 2 == 1),
+        "Particle subcycling interval for " + species_name + " must be odd! "
+    );
+
     //check if Radiation Reaction is enabled and do consistency checks
     pp_species_name.query("do_classical_radiation_reaction", do_classical_radiation_reaction);
     //if the species is not a lepton, do_classical_radiation_reaction
