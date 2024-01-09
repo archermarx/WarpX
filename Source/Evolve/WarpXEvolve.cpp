@@ -972,18 +972,18 @@ WarpX::doQEDEvents (int lev)
 #endif
 
 void
-WarpX::PushParticlesandDeposit (amrex::Real cur_time, bool skip_current, PushType push_type, int step)
+WarpX::PushParticlesandDeposit (amrex::Real cur_time, bool skip_current, int step, PushType push_type)
 {
     // Evolve particles to p^{n+1/2} and x^{n+1}
     // Deposit current, j^{n+1/2}
     for (int lev = 0; lev <= finest_level; ++lev) {
-        PushParticlesandDeposit(lev, cur_time, DtType::Full, skip_current, push_type, step);
+        PushParticlesandDeposit(lev, cur_time, DtType::Full, skip_current, step, push_type);
     }
 }
 
 void
 WarpX::PushParticlesandDeposit (int lev, amrex::Real cur_time, DtType a_dt_type, bool skip_current,
-                               PushType push_type, int step)
+                               int step, PushType push_type)
 {
     amrex::MultiFab* current_x = nullptr;
     amrex::MultiFab* current_y = nullptr;

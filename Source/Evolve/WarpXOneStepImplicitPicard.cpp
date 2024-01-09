@@ -152,7 +152,7 @@ WarpX::OneStep_ImplicitPicard(amrex::Real cur_time)
         // This uses Efield_fp and Bfield_fp, the field at n+1/2 from the previous iteration.
         bool skip_current = false;
         PushType push_type = PushType::Implicit;
-        PushParticlesandDeposit(cur_time, skip_current, push_type);
+        PushParticlesandDeposit(cur_time, skip_current, 0, push_type);
 
         SyncCurrentAndRho();
 
