@@ -470,11 +470,11 @@ MultiParticleContainer::Evolve (int lev,
     int ind = 0;
     for (auto& pc : allcontainers) {
         ind += 1;
-        int subcycling_interval = pc->subcycling_interval;
-        bool take_step = (!pc -> do_subcycling) || (pc->do_subcycling && step%subcycling_interval == 0);
-        //amrex::Print() << "Species " << ind << ", subcycling interval: " << subcycling_interval << ", take step = " << take_step << "\n";
+        int supercycling_interval = pc->supercycling_interval;
+        bool take_step = (!pc -> do_supercycling) || (pc->do_supercycling && step%supercycling_interval == 0);
+        //amrex::Print() << "Species " << ind << ", subcycling interval: " << supercycling_interval << ", take step = " << take_step << "\n";
         if (take_step){
-            auto dt_sub = dt * subcycling_interval;
+            auto dt_sub = dt * supercycling_interval;
             pc->Evolve(lev, Ex, Ey, Ez, Bx, By, Bz, jx, jy, jz, cjx, cjy, cjz,
                     rho, crho, cEx, cEy, cEz, cBx, cBy, cBz, t, dt_sub, a_dt_type, skip_deposition);
         }

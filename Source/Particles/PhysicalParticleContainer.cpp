@@ -345,14 +345,14 @@ PhysicalParticleContainer::PhysicalParticleContainer (AmrCore* amr_core, int isp
     pp_species_name.query("do_resampling", do_resampling);
     if (do_resampling) m_resampler = Resampling(species_name);
 
-    // Read particle subcycling options
-    pp_species_name.query("do_subcycling", do_subcycling);
-    pp_species_name.query("subcycling_interval", subcycling_interval);
+    // Read particle supercycling options
+    pp_species_name.query("do_supercycling", do_supercycling);
+    pp_species_name.query("supercycling_interval", supercycling_interval);
 
     // Check to make sure subcycle interval is odd
     WARPX_ALWAYS_ASSERT_WITH_MESSAGE(
-        !do_subcycling || (do_subcycling && subcycling_interval % 2 == 1),
-        "Particle subcycling interval for " + species_name + " must be odd! "
+        !do_supercycling || (do_supercycling && supercycling_interval % 2 == 1 && supercycling_interval >= 1),
+        "Particle supercycling interval for " + species_name + " must be odd and positive! "
     );
 
     //check if Radiation Reaction is enabled and do consistency checks

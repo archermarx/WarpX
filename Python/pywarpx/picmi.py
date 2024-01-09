@@ -225,9 +225,9 @@ class Species(picmistandard.PICMI_Species):
         self.resampling_trigger_intervals = kw.pop('warpx_resampling_trigger_intervals', None)
         self.resampling_triggering_max_avg_ppc = kw.pop('warpx_resampling_trigger_max_avg_ppc', None)
 
-        # Subcycling settings
-        self.do_subcycling = kw.pop('warpx_do_subcycling', None)
-        self.subcycling_interval = kw.pop('warpx_subcycling_interval', None)
+        # Supercycling settings
+        self.do_supercycling = kw.pop('warpx_do_supercycling', None)
+        self.supercycling_interval = kw.pop('warpx_supercycling_interval', None)
 
     def initialize_inputs(self, layout,
                           initialize_self_fields = False,
@@ -268,8 +268,8 @@ class Species(picmistandard.PICMI_Species):
                                              do_resampling=self.do_resampling,
                                              resampling_trigger_intervals=self.resampling_trigger_intervals,
                                              resampling_trigger_max_avg_ppc=self.resampling_triggering_max_avg_ppc,
-                                             do_subcycling=self.do_subcycling,
-                                             subcycling_interval=self.subcycling_interval,)
+                                             do_supercycling=self.do_supercycling,
+                                             supercycling_interval=self.supercycling_interval,)
 
         # add reflection models
         self.species.add_new_attr("reflection_model_xlo(E)", self.reflection_model_xlo)
