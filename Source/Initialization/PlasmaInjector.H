@@ -68,6 +68,9 @@ public:
     int num_particles_per_cell;
     amrex::Real num_particles_per_cell_real;
 
+    amrex::Real particle_weight;
+    amrex::Real num_particles_each_step;
+
     amrex::Vector<int> num_particles_per_cell_each_dim;
 
     // gamma * beta
@@ -83,6 +86,10 @@ public:
 
     // bool: whether the flux injection of particles should be done.
     [[nodiscard]] bool doFluxInjection () const noexcept { return h_flux_pos != nullptr;}
+
+    // bool: whether a constant random source of particles should be injected.
+    bool add_random_particles = false;
+    amrex::ParticleReal random_particles_weight;
 
     bool add_single_particle = false;
     amrex::Vector<amrex::ParticleReal> single_particle_pos;
@@ -186,6 +193,10 @@ protected:
     std::unique_ptr<amrex::Parser> uy_th_parser;
     std::unique_ptr<amrex::Parser> uz_th_parser;
 
+    std::unique_ptr<amrex::Parser> x_parser;
+    std::unique_ptr<amrex::Parser> y_parser;
+    std::unique_ptr<amrex::Parser> z_parser;
+
     // Keep a pointer to TemperatureProperties to ensure the lifetime of the
     // contained Parser
     std::unique_ptr<TemperatureProperties> h_mom_temp;
@@ -196,6 +207,7 @@ protected:
     void setupGaussianBeam (amrex::ParmParse const& pp_species);
     void setupNRandomPerCell (amrex::ParmParse const& pp_species);
     void setupNFluxPerCell (amrex::ParmParse const& pp_species);
+    void setupNRandomParticles (amrex::ParmParse const& pp_species);
     void setupNuniformPerCell (amrex::ParmParse const& pp_species);
     void setupExternalFile (amrex::ParmParse const& pp_species);
 

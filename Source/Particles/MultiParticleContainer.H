@@ -281,6 +281,9 @@ public:
     // Inject particles from a surface during the simulation
     void ContinuousFluxInjection(amrex::Real t, amrex::Real dt) const;
 
+    // Inject random particles during the simulation
+    void NRandomInjection() const;
+
     [[nodiscard]] std::vector<std::string> GetSpeciesNames() const { return species_names; }
 
     [[nodiscard]] std::vector<std::string> GetLasersNames() const { return lasers_names; }

@@ -273,6 +273,9 @@ public:
     // Inject a continuous flux of particles from a defined plane
     virtual void ContinuousFluxInjection(amrex::Real /*t*/, amrex::Real /*dt*/) {}
 
+    // Inject a continuous source of random particles
+    virtual void NRandomInjection() {}
+
     int getSpeciesId() const {return species_id;}
 
     ///

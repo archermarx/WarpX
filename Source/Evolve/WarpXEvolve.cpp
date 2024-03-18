@@ -286,6 +286,9 @@ WarpX::Evolve (int numsteps)
 
         mypc->ContinuousFluxInjection(cur_time, dt[0]);
 
+        // TODO: do particle injection here
+        mypc->NRandomInjection();
+
         mypc->ApplyBoundaryConditions();
 
         // interact the particles with EB walls (if present)

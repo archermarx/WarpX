@@ -14,6 +14,31 @@
 #include <AMReX_Gpu.H>
 #include <AMReX_Utility.H>
 
+// struct whose getPositionUnitBox returns x, y, z for a particle with
+// positions that are computed from a parser
+struct InjectorPositionParser
+{
+    InjectorPositionParser (amrex::ParserExecutor<3> const& a_x_parser,
+                            amrex::ParserExecutor<3> const& a_y_parser,
+                            amrex::ParserExecutor<3> const& a_z_parser) noexcept
+        : m_x_parser(a_x_parser), m_y_parser(a_y_parser), m_z_parser(a_z_parser) {}
+
+    [[nodiscard]]
+    AMREX_GPU_HOST_DEVICE
+    amrex::XDim3
+    getPositionUnitBox(int /*i_part*/, amrex::IntVect const /*ref_fac*/,
+                        amrex::RandomEngine const& engine) const noexcept
+    {
+        amrex::Real u1, u2, u3;
+        u1 = amrex::Random(engine);
+        u2 = amrex::Random(engine);
+        u3 = amrex::Random(engine);
+        return amrex::XDim3{m_x_parser(u1, u2, u3), m_y_parser(u1, u2, u3), m_z_parser(u1, u2, u3)};
+    }
+
+    amrex::ParserExecutor<3> m_x_parser, m_y_parser, m_z_parser;
+};
+
 // struct whose getPositionUnitBox returns x, y and z for a particle with
 // random distribution inside a unit cell.
 struct InjectorPositionRandom
@@ -113,12 +138,28 @@ private:
 // Base struct for position injector.
 // InjectorPosition contains a union (called Object) that holds any one
 // instance of:
+// - InjectorPositionParser : to generate random distribution according to parser;
 // - InjectorPositionRandom : to generate random distribution;
 // - InjectorPositionRegular: to generate regular distribution.
 // The choice is made at runtime, depending in the constructor called.
 // This mimics virtual functions.
 struct InjectorPosition
 {
+    // This constructor stores a InjectorPostionParser in union object.
+    InjectorPosition (InjectorPositionParser* t,
+                      amrex::Real a_xmin, amrex::Real a_xmax,
+                      amrex::Real a_ymin, amrex::Real a_ymax,
+                      amrex::Real a_zmin, amrex::Real a_zmax,
+                      amrex::ParserExecutor<3> const& a_x_parser,
+                      amrex::ParserExecutor<3> const& a_y_parser,
+                      amrex::ParserExecutor<3> const& a_z_parser)
+        : type(Type::parser),
+          object(t, a_x_parser, a_y_parser, a_z_parser),
+          xmin(a_xmin), xmax(a_xmax),
+          ymin(a_ymin), ymax(a_ymax),
+          zmin(a_zmin), zmax(a_zmax)
+    { }
+
     // This constructor stores a InjectorPositionRandom in union object.
     InjectorPosition (InjectorPositionRandom* t,
                       amrex::Real a_xmin, amrex::Real a_xmax,
@@ -176,6 +217,10 @@ struct InjectorPosition
     {
         switch (type)
         {
+        case Type::parser:
+        {
+            return object.parser.getPositionUnitBox(i_part, ref_fac, engine);
+        }
         case Type::regular:
         {
             return object.regular.getPositionUnitBox(i_part, ref_fac, engine);
@@ -233,17 +278,23 @@ struct InjectorPosition
     }
 
 private:
-    enum struct Type { random, randomplane, regular };
+    enum struct Type { parser, random, randomplane, regular };
     Type type;
 
     // An instance of union Object constructs and stores any one of
     // the objects declared (random or regular).
     union Object {
+        Object (InjectorPositionParser*,
+            amrex::ParserExecutor<3> const& a_x_parser,
+            amrex::ParserExecutor<3> const& a_y_parser,
+            amrex::ParserExecutor<3> const& a_z_parser) noexcept
+            : parser(a_x_parser, a_y_parser, a_z_parser) {}
         Object (InjectorPositionRandom*) noexcept : random() {}
         Object (InjectorPositionRandomPlane*, int const& a_dir) noexcept
             : randomplane(a_dir) {}
         Object (InjectorPositionRegular*, amrex::Dim3 const& a_ppc) noexcept
             : regular(a_ppc) {}
+        InjectorPositionParser parser;
         InjectorPositionRandom random;
         InjectorPositionRandomPlane randomplane;
         InjectorPositionRegular regular;

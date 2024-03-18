@@ -8,6 +8,7 @@
 #ifndef WARPX_INJECTOR_POSITION_FWD_H
 #define WARPX_INJECTOR_POSITION_FWD_H
 
+struct InjectorPositionParser;
 struct InjectorPositionRandom;
 struct InjectorPositionRegular;
 struct InjectorPosition;

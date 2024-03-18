@@ -757,6 +757,18 @@ Particle initialization
     * ``NRandomPerCell``: injection with a fixed number of randomly-distributed particles per cell.
       This requires the additional parameter ``<species_name>.num_particles_per_cell``.
 
+    * ``NRandomParticles``: injection with a fixed number of randomly-distributed particles across the domain.
+      This requires the additional parameters ``<species_name>.num_particles_each_step`` and ``<species_name>.particle_weight``.
+      This injection style also requires the following parameters, which define expressions for the 
+      components of the particle position vector as functions of three uniform random variables on
+      the interval (0, 1), ``u1``, ``u2``, and ``u3``.
+
+      * ``<species_name>.position_func_x(u1, u2, u3)``
+      
+      * ``<species_name>.position_func_y(u1, u2, u3)``
+
+      * ``<species_name>.position_func_z(u1, u2, u3)``
+    
     * ``SingleParticle``: Inject a single macroparticle.
       This requires the additional parameters:
 
