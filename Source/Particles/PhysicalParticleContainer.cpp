@@ -932,6 +932,10 @@ PhysicalParticleContainer::AddParticles (int lev)
                           1, attr, 0, attr_int, 0);
         }
 
+        if (plasma_injector->add_random_particles) {
+            AddNRandomParticles(*plasma_injector);
+        }
+
         if (plasma_injector->gaussian_beam) {
             AddGaussianBeam(*plasma_injector);
         }
@@ -942,10 +946,80 @@ PhysicalParticleContainer::AddParticles (int lev)
                               plasma_injector->z_shift);
         }
 
-        if ( plasma_injector->doInjection() ) {
+        if ( plasma_injector->doInjection() && 
+             !plasma_injector->add_random_particles) {
             AddPlasma(*plasma_injector, lev);
         }
     }
+}
+
+void
+PhysicalParticleContainer::AddNRandomParticles (PlasmaInjector const& plasma_injector){
+    
+    WARPX_PROFILE("PhysicalParticleContainer::AddNRandomParticles()");
+    
+    // Declare temporary vectors on the CPU
+    Gpu::HostVector<ParticleReal> particle_x;
+    Gpu::HostVector<ParticleReal> particle_y;
+    Gpu::HostVector<ParticleReal> particle_z;
+    Gpu::HostVector<ParticleReal> particle_ux;
+    Gpu::HostVector<ParticleReal> particle_uy;
+    Gpu::HostVector<ParticleReal> particle_uz;
+    Gpu::HostVector<ParticleReal> particle_w;
+
+    // Get the RNG
+    amrex::RandomEngine const& engine {};
+
+    // determine how many particles we need this step
+    const amrex::Real num_particles_real = plasma_injector.num_particles_each_step;
+    const long num_particles = static_cast<int>(num_particles_real + amrex::Random());
+
+    // get the particle injectors
+    InjectorPosition* inj_pos = plasma_injector.getInjectorPosition();
+    InjectorMomentum* inj_mom = plasma_injector.getInjectorMomentumHost();
+
+    // get the particle weight
+    const amrex::Real weight = plasma_injector.particle_weight; 
+
+    if (ParallelDescriptor::IOProcessor()) {
+        for (long i = 0; i < num_particles; ++i) {
+            // get position
+            const XDim3 pos = inj_pos->getPositionUnitBox(i, amrex::IntVect::TheUnitVector(), engine);
+            XDim3 mom = inj_mom->getMomentum(pos.x, pos.y, pos.z, engine);
+
+            // Multiply velocities by speed of light
+            mom.x *= PhysConst::c;
+            mom.y *= PhysConst::c;
+            mom.z *= PhysConst::c;
+
+            // Add particles to our arrays
+            CheckAndAddParticle(
+                pos.x, pos.y, pos.z, mom.x, mom.y, mom.z, weight,
+                particle_x,  particle_y,  particle_z,
+                particle_ux, particle_uy, particle_uz,
+                particle_w);
+        }
+    }
+
+    // Add the temporary CPU vectors to the particle structure
+    auto const np = static_cast<long>(particle_z.size());
+
+    const amrex::Vector<ParticleReal> xp(particle_x.data(), particle_x.data() + np);
+    const amrex::Vector<ParticleReal> yp(particle_y.data(), particle_y.data() + np);
+    const amrex::Vector<ParticleReal> zp(particle_z.data(), particle_z.data() + np);
+    const amrex::Vector<ParticleReal> uxp(particle_ux.data(), particle_ux.data() + np);
+    const amrex::Vector<ParticleReal> uyp(particle_uy.data(), particle_uy.data() + np);
+    const amrex::Vector<ParticleReal> uzp(particle_uz.data(), particle_uz.data() + np);
+
+    amrex::Vector<amrex::Vector<ParticleReal>> attr;
+    const amrex::Vector<ParticleReal> wp(particle_w.data(), particle_w.data() + np);
+    attr.push_back(wp);
+
+    const amrex::Vector<amrex::Vector<int>> attr_int;
+
+    AddNParticles(0, np, xp,  yp,  zp, uxp, uyp, uzp,
+                  1, attr, 0, attr_int, 1);
+
 }
 
 void
@@ -2713,6 +2787,18 @@ PhysicalParticleContainer::ContinuousFluxInjection (amrex::Real t, amrex::Real d
                 AddPlasmaFlux(*plasma_injector, dt);
 
             }
+        }
+    }
+}
+
+/* \brief Inject a fixed number of random particles during a simulation
+ */
+void
+PhysicalParticleContainer::NRandomInjection ()
+{
+    for (auto const& plasma_injector : plasma_injectors) {
+        if (plasma_injector->add_random_particles){
+            AddNRandomParticles(*plasma_injector);
         }
     }
 }

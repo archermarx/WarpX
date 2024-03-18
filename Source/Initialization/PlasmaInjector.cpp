@@ -134,6 +134,8 @@ PlasmaInjector::PlasmaInjector (int ispecies, const std::string& name,
         setupNRandomPerCell(pp_species);
     } else if (injection_style == "nfluxpercell") {
         setupNFluxPerCell(pp_species);
+    } else if (injection_style == "nrandomparticles") {
+        setupNRandomParticles(pp_species);
     } else if (injection_style == "nuniformpercell") {
         setupNuniformPerCell(pp_species);
     } else if (injection_style == "external_file") {
@@ -289,6 +291,49 @@ void PlasmaInjector::setupNRandomPerCell (amrex::ParmParse const& pp_species)
                                 ux_parser, uy_parser, uz_parser,
                                 ux_th_parser, uy_th_parser, uz_th_parser,
                                 h_mom_temp, h_mom_vel);
+}
+
+void PlasmaInjector::setupNRandomParticles (amrex::ParmParse const& pp_species)
+{
+    utils::parser::getWithParser(pp_species, source_name, "num_particles_each_step", num_particles_each_step);
+    utils::parser::getWithParser(pp_species, source_name, "particle_weight", particle_weight);
+
+    std::string str_position_function_x;
+    std::string str_position_function_y;
+    std::string str_position_function_z;
+
+    utils::parser::Store_parserString(pp_species, source_name, "position_function_x(u1,u2,u3)", str_position_function_x);
+    utils::parser::Store_parserString(pp_species, source_name, "position_function_y(u1,u2,u3)", str_position_function_y);
+    utils::parser::Store_parserString(pp_species, source_name, "position_function_z(u1,u2,u3)", str_position_function_z);
+
+    x_parser = std::make_unique<amrex::Parser>(
+        utils::parser::makeParser(str_position_function_x, {"u1", "u2", "u3"}));
+    y_parser = std::make_unique<amrex::Parser>(
+        utils::parser::makeParser(str_position_function_y, {"u1", "u2", "u3"}));
+    z_parser = std::make_unique<amrex::Parser>(
+        utils::parser::makeParser(str_position_function_z, {"u1", "u2", "u3"}));
+
+    // Construct InjectorPosition with InjectorPositionParser.
+    h_inj_pos = std::make_unique<InjectorPosition>(
+        (InjectorPositionParser*)nullptr,
+        xmin, xmax, ymin, ymax, zmin, zmax,
+        x_parser->compile<3>(),
+        y_parser->compile<3>(),
+        z_parser->compile<3>());
+    #ifdef AMREX_USE_GPU
+        d_inj_pos = static_cast<InjectorPosition*>
+            (amrex::The_Arena()->alloc(sizeof(InjectorPosition)));
+        amrex::Gpu::htod_memcpy_async(d_inj_pos, h_inj_pos.get(), sizeof(InjectorPosition));
+    #else
+        d_inj_pos = h_inj_pos.get();
+    #endif
+
+    SpeciesUtils::parseMomentum(species_name, source_name, "nrandomparticles", h_inj_mom,
+                                ux_parser, uy_parser, uz_parser,
+                                ux_th_parser, uy_th_parser, uz_th_parser,
+                                h_mom_temp, h_mom_vel);
+
+    add_random_particles = true;
 }
 
 void PlasmaInjector::setupNFluxPerCell (amrex::ParmParse const& pp_species)

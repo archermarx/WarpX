@@ -758,6 +758,20 @@ MultiParticleContainer::ContinuousFluxInjection (amrex::Real t, amrex::Real dt) 
     }
 }
 
+/* \brief Continuous injection of a fixed number of particles
+ * Loop over all WarpXParticleContainer in MultiParticleContainer and
+ * calls virtual function NRandomInjection.
+ */
+void
+MultiParticleContainer::NRandomInjection () const
+{
+    int i = 0;
+    for (const auto& pc : allcontainers){
+        pc->NRandomInjection();
+        i += 1;
+    }
+}
+
 /* \brief Get ID of product species of each species.
  * The users specifies the name of the product species,
  * this routine get its ID.

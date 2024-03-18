@@ -228,6 +228,8 @@ public:
 
     void AddGaussianBeam (PlasmaInjector const& plasma_injector);
 
+    void AddNRandomParticles (PlasmaInjector const& plasma_injector);
+
     /** Load a particle beam from an external file
      * @param[in] the PlasmaInjector instance holding the input parameters
      * @param[in] q_tot total charge of the particle species to be initialized
@@ -412,6 +414,9 @@ protected:
 
     // Continuously inject a flux of particles from a defined surface
     void ContinuousFluxInjection (amrex::Real t, amrex::Real dt) override;
+
+     // Inject random particles during the simulation
+    void NRandomInjection() override;
 
     //This function return true if the PhysicalParticleContainer contains electrons
     //or positrons, false otherwise
