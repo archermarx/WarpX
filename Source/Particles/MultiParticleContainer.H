@@ -89,6 +89,20 @@ public:
         return allcontainers[index]->meanParticleVelocity();
     }
 
+    amrex::ParticleReal maxParticleVelocity(bool local = false) {
+        using namespace amrex::literals;
+
+        amrex::ParticleReal max_vel = 0.0_prt;
+        for (const auto& pc: allcontainers) {
+            const auto pc_max_vel = pc->maxParticleVelocity(local);
+            if (pc_max_vel > max_vel) {
+                max_vel = pc_max_vel;
+            }
+        }
+
+        return max_vel;
+    }
+
     void AllocData ();
 
     void InitData ();

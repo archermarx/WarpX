@@ -223,6 +223,22 @@ WarpX::Evolve (int numsteps)
             }
         }
 
+#if 1
+        const auto max_vel = mypc->maxParticleVelocity();
+        amrex::Print() << "Maximum velocity: " << max_vel << " m/s\n";
+
+        const amrex::Real* dx = geom[max_level].CellSize();
+
+#if defined(WARPX_DIM_1D_Z)
+        amrex::Real deltat = cfl * dx[0] / max_vel;
+#elif defined(WARPX_DIM_XZ) || defined(WARPX_DIM_RZ)
+        amrex::Real deltat = cfl * std::min(dx[0], dx[1]) / max_vel;
+#else
+        amrex::Real deltat = cfl * std::min(dx[0], std::min(dx[1], dx[2])) / max_vel;
+#endif
+
+        amrex::Print() << "Allowable timestep: " << deltat << "s\n";
+#endif
         HandleParticlesAtBoundaries(step, cur_time, num_moved);
 
         // Field solve step for electrostatic or hybrid-PIC solvers
